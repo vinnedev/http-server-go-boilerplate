@@ -6,6 +6,7 @@ package http_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -99,7 +100,9 @@ func TestHealthHandler_CheckHealth_ErrorHandling(t *testing.T) {
 	}
 
 	// Create a custom response writer that fails on Write
-	rr := &errorResponseWriter{}
+	rr := &errorResponseWriter{
+		ResponseRecorder: *httptest.NewRecorder(),
+	}
 
 	// Call the handler
 	handler.CheckHealth(rr, req)
@@ -116,5 +119,9 @@ type errorResponseWriter struct {
 }
 
 func (w *errorResponseWriter) Write(b []byte) (int, error) {
-	return 0, nil
+	return 0, errors.New("simulated write error")
+}
+
+func (w *errorResponseWriter) WriteHeader(statusCode int) {
+	w.Code = statusCode
 }
